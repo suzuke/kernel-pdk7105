@@ -1,0 +1,80 @@
+if SH_ST_B2057
+
+menu "B2057: STxH207-HDK board options"
+
+choice
+	prompt "B2057: Internal Ethernet PHY"
+	default STM_B2057_INT_PHY_IC101G
+	help
+	  The STxH207 can have an Ethernet PHY mounted alongside the
+	  SoC inside the package. Use this option to select which PHY,
+	  if any, is present in the device being used.
+
+config STM_B2057_INT_PHY_NONE
+	bool "None"
+
+config STM_B2057_INT_PHY_IC101A
+	bool "IC+101A"
+	help
+	  Select this option if using an STxH207 which has an IC+101A
+	  Ethernet PHY mounted alongside the SoC inside the package.
+
+config STM_B2057_INT_PHY_IC101G
+	bool "IC+101G"
+	help
+	  Select this option if using an STxH207 which has an IC+101G
+	  Ethernet PHY mounted alongside the SoC inside the package.
+
+endchoice
+
+choice
+	prompt "B2057: Internal PHY interface"
+	default STM_B2057_IC101_MII
+	depends on !STM_B2057_INT_PHY_NONE
+	help
+	  It is possible to use either MII or RMII to communicate with
+	  the IC+101 Ethernet PHY mounted inside the STxH207. Use this
+	  option to select the desired protocol. This must match the
+	  jumper setting on the board:
+			MII		RMII
+		 SP1	1-2 (MII)	2-3 (RMII)
+		 JP3-1	on		off
+		 JP3-2	off		on
+
+config STM_B2057_IC101_MII
+	bool "MII connection"
+
+config STM_B2057_IC101_RMII
+	bool "RMII connection with external clock"
+
+endchoice
+
+choice
+	prompt "B2057: card selection on JP1 connector (Ethernet PHY)"
+	default STM_B2057_JP1_NONE
+	depends on STM_B2057_INT_PHY_NONE
+	help
+	  Select the appropriate Ethernet PHY card.
+	  This controls the Ethernet connection mode with the PHY, and
+	  the corrisponding pad allocation and configuration.
+
+config STM_B2057_JP1_NONE
+       bool "None"
+       help
+         No Ethernet card is plugged into JP1 of the B2057.
+
+config STM_B2057_JP1_B2032
+	bool "B2032 IC+ IP1001 PHY card"
+	help
+	  B2032 Ethernet card on JP1 of B2057.
+
+config STM_B2057_JP1_B2035
+	bool "B2035 IC+ IP101 PHY card"
+	help
+	  B2035 connected to JP1 of B2057.
+
+endchoice
+
+endmenu
+
+endif

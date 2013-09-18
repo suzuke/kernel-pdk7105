@@ -1,0 +1,126 @@
+if SH_ST_B2039
+
+menu "B2039: STxH207-HVK board options"
+
+choice
+	prompt "B2039: Internal Ethernet PHY"
+	default STM_B2039_INT_PHY_IC101G
+	help
+	  The STxH207 can have an Ethernet PHY mounted alongside the
+	  SoC inside the package. Use this option to select which PHY,
+	  if any, is present in the device being used.
+
+config STM_B2039_INT_PHY_NONE
+	bool "None"
+
+config STM_B2039_INT_PHY_IC101A
+	bool "IC+101A"
+	help
+	  Select this option if using an STxH207 which has an IC+101A
+	  Ethernet PHY mounted alongside the SoC inside the package.
+
+config STM_B2039_INT_PHY_IC101G
+	bool "IC+101G"
+	help
+	  Select this option if using an STxH207 which has an IC+101G
+	  Ethernet PHY mounted alongside the SoC inside the package.
+
+endchoice
+
+choice
+	prompt "B2039: Internal PHY interface"
+	default STM_B2039_IC101_MII
+	depends on !STM_B2039_INT_PHY_NONE
+	help
+	  It is possible to use either MII or RMII to communicate with
+	  the IC+101 Ethernet PHY mounted inside the STxH207. Use this
+	  option to select the desired protocol. This must match the
+	  jumper setting on the board:
+			MII	RMII (ext clk)	RMII (no ext clk)
+		 J30	remove	1-2		2-3
+		 J37	1-2	2-3		remove
+		 J38	remove	2-3		2-3
+		 J39	1-2	2-3		2-3
+
+config STM_B2039_IC101_MII
+	bool "MII connection"
+
+config STM_B2039_IC101_RMII_EXTCLK
+	bool "RMII connection with external clock"
+
+config STM_B2039_IC101_RMII_NO_EXTCLK
+	depends on STM_B2039_INT_PHY_IC101A
+	bool "RMII connection with no external clock"
+
+endchoice
+
+choice
+	prompt "B2039: card selection on CN14 connector (Ethernet PHY)"
+	default STM_B2039_CN14_NONE
+	depends on STM_B2039_INT_PHY_NONE
+	help
+	  Select the appropriate Ethernet PHY card.
+	  This controls the Ethernet connection mode with the PHY, and
+	  the corrisponding pad allocation and configuration.
+
+config STM_B2039_CN14_NONE
+	bool "None"
+	help
+	  No Ethernet card is plugged into CN14 of the B2039.
+
+config STM_B2039_CN14_B2032
+	bool "B2032 IC+ IP1001 PHY card"
+	help
+	  B2032 Ethernet card on CN14 of B2039.
+
+	  Note in order to continue using UART10 it will be necessary
+	  to remove R256.
+
+config STM_B2039_CN14_B2035
+	bool "B2035 IC+ IP101 PHY card"
+	help
+	  B2035 connected to CN14 of B2039.
+
+endchoice
+
+config STM_B2039_J35_PHY_RESET
+	bool "Use PIO3[0] as a PHY reset signal"
+	default y
+	help
+	  Set this option to use PIO3[0] as a PHY reset signal. This requires
+	  fitting J35 in position 1-2 (which prevents the use of this pin
+	  as SBC_SYS_CLK_IN), and also disconnecting CN12 (which prevents
+	  the use of UART11). This also conflicts with the keyscan and
+	  PWM10 use of this pin.
+
+config STM_B2039_CN38_B2048A
+	bool "B2048A - eMMC/MMC Module"
+	help
+	  B2048A connected to CN38 of B2039.
+	  There are two versions of this modules:
+	  a card with the embedded MMC and onther one
+	  with the MMC/SD slot.
+
+choice
+	prompt  "B2048A slot/eMMC selection"
+	depends on STM_B2039_CN38_B2048A
+	default STM_B2039_CN38_B2048A_MMC_EMMC
+	help
+	  Select if the board has the eMMC or the MMC/SD slot.
+
+config	STM_B2039_CN38_B2048A_MMC_SLOT
+	bool "Multi Media Card slot on daughter board"
+	depends on STM_B2039_CN38_B2048A
+	help
+	  Select this option if the board has an MMC card slot.
+
+config	STM_B2039_CN38_B2048A_MMC_EMMC
+	bool "Embedded Multi Media Card (eMMC) on daughter board"
+	help
+	  Select this option if the board has an eMMC device.
+
+endchoice
+
+endmenu
+
+endif

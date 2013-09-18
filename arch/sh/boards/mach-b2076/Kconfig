@@ -1,0 +1,60 @@
+if SH_ST_B2076
+
+menu "B2076: STxH207-HVK board options"
+
+config STM_B2076_PHY_RESET
+	bool "Use PIO3[0] as a PHY reset signal"
+	default y
+	help
+	  Set this option to use PIO3[0] as a PHY reset signal. This requires
+	  fitting J38 in position 1-2 (which prevents the use of this pin
+	  as SBC_SYS_CLK_IN), and also disconnecting CN12 (which prevents
+	  the use of UART11). This also conflicts with the keyscan and
+	  PWM10 use of this pin.
+
+config STM_B2076_CN38_B2048A
+	bool "B2048A - eMMC/MMC Module"
+	help
+	  B2048A connected to CN38 of B2076.
+	  There are two versions of this module:
+	  a card with the embedded MMC and anther one
+	  with the MMC/SD slot.
+
+choice
+	prompt  "B2048A slot/eMMC selection"
+	depends on STM_B2076_CN38_B2048A
+	default STM_B2076_CN38_B2048A_MMC_EMMC
+	help
+	  Select if the board has the eMMC or the MMC/SD slot.
+
+config	STM_B2076_CN38_B2048A_MMC_SLOT
+	bool "Multi Media Card slot on daughter board"
+	depends on STM_B2076_CN38_B2048A
+	help
+	  Select this option if the board has an MMC card slot.
+
+config	STM_B2076_CN38_B2048A_MMC_EMMC
+	bool "Embedded Multi Media Card (eMMC) on daughter board"
+	help
+	  Select this option if the board has an eMMC device.
+
+endchoice
+
+choice
+	prompt  "Use CN9 for PCIe or SATA"
+	default STM_B2076_CN9_PCIE
+	help
+	  CN9 is a PCIe slot, however with the use a small daughter
+	  board it is possible to use this connector for SATA.
+
+config	STM_B2076_CN9_PCIE
+	bool "Use CN9 for PCIe"
+
+config	STM_B2076_CN9_SATA
+	bool "Use CN9 for SATA"
+
+endchoice
+
+endmenu
+
+endif

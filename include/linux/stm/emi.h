@@ -1,0 +1,43 @@
+/*
+ * Copyright (C) 2007 STMicroelectronics Limited
+ * Author: Stuart Menefy <stuart.menefy@st.com>
+ *
+ * May be copied or modified under the terms of the GNU General Public
+ * License.  See linux/COPYING for more information.
+ */
+
+#ifndef __LINUX_STM_EMI_H
+#define __LINUX_STM_EMI_H
+
+#define EMI_BANKS 5
+
+struct emi_timing_data {
+	int rd_cycle_time;
+	int rd_oee_start;
+	int rd_oee_end;
+	int rd_latchpoint;
+	int busreleasetime;
+
+	int wr_cycle_time;
+	int wr_oee_start;
+	int wr_oee_end;
+
+	int wait_active_low;
+};
+
+unsigned long emi_bank_base(int bank);
+void emi_bank_configure(int bank, unsigned long data[4]);
+void emi_bank_write_cs_enable(int bank, int enable);
+void emi_config_pcmode(int bank, int pc_mode);
+
+void emi_config_pata(int bank, int pc_mode);
+void emi_config_nand(int bank, struct emi_timing_data *timing_data);
+struct stm_plat_pci_config;
+void emi_config_pci(struct stm_plat_pci_config *pci_config);
+
+enum nandi_controllers {STM_NANDI_UNCONFIGURED,
+			STM_NANDI_HAMMING,
+			STM_NANDI_BCH};
+void emiss_nandi_select(enum nandi_controllers controller);
+
+#endif

@@ -1,0 +1,19 @@
+if SH_ST_HDKH225
+
+menu "H225-HDK STx7141 HDK reference board options"
+
+config SH_ST_HDKH225_STMMAC0
+	bool "Enable STMMAC 0"
+	default n
+	help
+	  Enable STMMAC 0, MAC connected to the IP1001 phy (J24).
+
+config SH_ST_HDKH225_STMMAC1
+	bool "Enable STMMAC 1"
+	default n
+	help
+	  Enable STMMAC 1, MAC connected to the internal IP101A phy (EJ1).
+
+endmenu
+
+endif
