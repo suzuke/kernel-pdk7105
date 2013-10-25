@@ -815,6 +815,38 @@ struct dentry *generic_fh_to_parent(struct super_block *sb, struct fid *fid,
 }
 EXPORT_SYMBOL_GPL(generic_fh_to_parent);
 
+
+/**
+ * generic_file_fsync - generic fsync implementation for simple filesystems
+ * @file:       file to synchronize
+ * @datasync:   only synchronize essential metadata if true
+ *
+ * This is a generic implementation of the fsync method for simple
+ * filesystems which track all non-inode metadata in the buffers list
+ * hanging off the address_space structure.
+ */
+int generic_file_fsync(struct file *file, int datasync)
+{
+        struct inode *inode = file->f_mapping->host;
+        int err;
+        int ret;
+
+        ret = sync_mapping_buffers(inode->i_mapping);
+        if (!(inode->i_state & I_DIRTY))
+                return ret;
+        if (datasync && !(inode->i_state & I_DIRTY_DATASYNC))
+                return ret;
+
+        err = sync_inode_metadata(inode, 1);
+        if (ret == 0)
+                ret = err;
+        return ret;
+}
+EXPORT_SYMBOL(generic_file_fsync);
+
+
+
+
 int simple_fsync(struct file *file, struct dentry *dentry, int datasync)
 {
 	struct writeback_control wbc = {
