@@ -53,7 +53,7 @@ struct us_data;
 struct scsi_cmnd;
 
 /*
- * Unusual device list definitions 
+ * Unusual device list definitions
  */
 
 struct us_unusual_dev {
@@ -122,7 +122,7 @@ struct us_data {
 	u8			max_lun;
 
 	u8			ifnum;		 /* interface number   */
-	u8			ep_bInterval;	 /* interrupt interval */ 
+	u8			ep_bInterval;	 /* interrupt interval */
 
 	/* function pointers for this device */
 	trans_cmnd		transport;	 /* transport function	   */
@@ -147,6 +147,7 @@ struct us_data {
 	struct completion	notify;		 /* thread begin/end	    */
 	wait_queue_head_t	delay_wait;	 /* wait during scan, reset */
 	struct completion	scanning_done;	 /* wait for scan thread    */
+	struct completion	thread_done;	 /* wait for DOM scan done */
 
 	/* subdriver information */
 	void			*extra;		 /* Any extra data          */

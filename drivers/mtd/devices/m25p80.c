@@ -680,6 +680,14 @@ static struct flash_info __devinitdata m25p_data [] = {
 	{ "w25x16", 0xef3015, 0, 64 * 1024, 32, SECT_4K, },
 	{ "w25x32", 0xef3016, 0, 64 * 1024, 64, SECT_4K, },
 	{ "w25x64", 0xef3017, 0, 64 * 1024, 128, SECT_4K, },
+	{ "w25q32", 0xef4016, 0, 64 * 1024,  64, SECT_4K, },
+	{ "w25q32dw", 0xef6016, 0, 64 * 1024,  64, SECT_4K, },
+	{ "w25x64", 0xef3017, 0, 64 * 1024, 128, SECT_4K, },
+	{ "w25q64", 0xef4017, 0, 64 * 1024, 128, SECT_4K, },
+	{ "w25q80", 0xef5014, 0, 64 * 1024,  16, SECT_4K, },
+	{ "w25q80bl", 0xef4014, 0, 64 * 1024,  16, SECT_4K, },
+	{ "w25q128", 0xef4018, 0, 64 * 1024, 256, SECT_4K, },
+	{ "w25q256", 0xef4019, 0, 64 * 1024, 512, SECT_4K, },
 };
 
 static struct flash_info *__devinit jedec_probe(struct spi_device *spi)

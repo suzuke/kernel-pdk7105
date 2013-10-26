@@ -842,7 +842,7 @@ static int usb_stor_scan_thread(void * __us)
 
 		/* Should we unbind if no devices were detected? */
 	}
-
+	complete(&us->thread_done);
 	complete_and_exit(&us->scanning_done, 0);
 }
 
@@ -881,6 +881,7 @@ int usb_stor_probe1(struct us_data **pus,
 	init_completion(&(us->notify));
 	init_waitqueue_head(&us->delay_wait);
 	init_completion(&us->scanning_done);
+	init_completion(&us->thread_done);
 
 
 	/* Associate the us_data structure with the USB device */
@@ -912,6 +913,7 @@ EXPORT_SYMBOL_GPL(usb_stor_probe1);
 /* Second part of general USB mass-storage probing */
 int usb_stor_probe2(struct us_data *us)
 {
+	static int is_dom_scanned=0;
 	struct task_struct *th;
 	int result;
 
@@ -956,6 +958,19 @@ int usb_stor_probe2(struct us_data *us)
 
 	wake_up_process(th);
 
+	if (!is_dom_scanned) {
+		US_DEBUGP("%s %s:%d enable stx7105_configure_usb 1\n",
+			__func__, __FILE__, __LINE__);
+		is_dom_scanned = 1;
+		stx7105_configure_usb(1, &(struct stx7105_usb_config) {
+		    .ovrcur_mode = stx7105_usb_ovrcur_active_low,
+		    .pwr_enabled = 1,
+		    .routing.usb1.ovrcur = stx7105_usb1_ovrcur_pio4_6,
+		    .routing.usb1.pwr = stx7105_usb1_pwr_pio4_7, });
+		US_DEBUGP("%s %s:%d end stx7105_configure_usb 1\n",
+			__func__, __FILE__, __LINE__);
+	}
+
 	return 0;
 
 	/* We come here if there are any problems */
@@ -981,7 +996,6 @@ EXPORT_SYMBOL_GPL(usb_stor_disconnect);
 static int storage_probe(struct usb_interface *intf,
 			 const struct usb_device_id *id)
 {
-	static int is_dom_scanned=0;
 	struct us_data *us;
 	int result;
 
@@ -1011,18 +1025,6 @@ static int storage_probe(struct usb_interface *intf,
 
 	result = usb_stor_probe2(us);
 
-	if (!is_dom_scanned) {
-		US_DEBUGP("%s %s:%d enable stx7105_configure_usb 1\n",
-			__func__, __FILE__, __LINE__);
-		is_dom_scanned = 1;
-		stx7105_configure_usb(1, &(struct stx7105_usb_config) {
-		    .ovrcur_mode = stx7105_usb_ovrcur_active_low,
-		    .pwr_enabled = 1,
-		    .routing.usb1.ovrcur = stx7105_usb1_ovrcur_pio4_6,
-		    .routing.usb1.pwr = stx7105_usb1_pwr_pio4_7, });
-		US_DEBUGP("%s %s:%d end stx7105_configure_usb 1\n",
-			__func__, __FILE__, __LINE__);
-	}
 	return result;
 }
 
