@@ -93,6 +93,31 @@ static struct platform_device pdk7105_leds = {
 	},
 };
 
+#if defined(CONFIG_KEYBOARD_GPIO)
+static struct gpio_keys_button pdk7105_keys[] = {
+  {
+    .gpio = stm_gpio(0, 1), /*rexct.131108: set gpio pin number(group number,sub-sequence number) */
+    .code = KEY_ENTER, /*rexct.131108:KEY_ENTER = 28 ref:include/linux/input.h */
+    .active_low = 1,
+    .wakeup = 1,
+  },
+};
+
+static struct gpio_keys_platform_data pdk7105_key_data = {
+  .buttons    = pdk7105_keys,
+  .nbuttons   = ARRAY_SIZE(pdk7105_keys),
+};
+
+static struct platform_device pdk7105_key_device = {
+  .name       = "gpio-keys",
+  .id     = -1,
+  .num_resources  = 0,
+  .dev        = {
+  .platform_data  = &pdk7105_key_data,
+    }
+};
+#endif
+
 static struct stpio_pin *phy_reset_pin;
 
 static int pdk7105_phy_reset(void* bus)
@@ -337,6 +362,9 @@ static struct platform_device *pdk7105_devices[] __initdata = {
 //	&pdk7105_leds,
 //	&pdk7105_phy_device,
 	&spi_pio_device,
+#if defined(CONFIG_KEYBOARD_GPIO)
+	&pdk7105_key_device, /* rexct.131108:register reset key as a platform device */
+#endif
 };
 
 /* PCI configuration */
