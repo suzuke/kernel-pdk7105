@@ -74,6 +74,7 @@ static void __init pdk7105_setup(char** cmdline_p)
 //            .is_console = 0, });
 }
 
+#if defined(CONFIG_LEDS_GPIO) || defined(CONFIG_LEDS_GPIO_MODULE)
 static struct platform_device pdk7105_leds = {
 	.name = "leds-gpio",
 	.id = 0,
@@ -82,23 +83,28 @@ static struct platform_device pdk7105_leds = {
 		.leds = (struct gpio_led[]) {
 			{
 				.name = "LD5",
+#if defined(CONFIG_LEDS_TRIGGER_HEARTBEAT)
 				.default_trigger = "heartbeat",
+#endif
 				.gpio = stm_gpio(0, 4), //stpio_to_gpio(2, 4),/* rexct.131108:should be (0,4)*/
-				.active_low=1,
+				.active_low=0,
 				.retain_state_suspended = 1,
 				.default_state = 0, /* 0:on 1:off 2:keep */
 			},
 			{
 				.name = "LD6",
-				.default_trigger = "ide-disk",
+#if defined(CONFIG_LEDS_TRIGGER_TIMER)
+				.default_trigger = "timer",
+#endif
 				.gpio = stm_gpio(0, 5), //stpio_to_gpio(2, 3),/* rexct.131108:should be (0,5)*/
-				.active_low = 1,
+				.active_low = 0,
 				.retain_state_suspended = 1,
 				.default_state = 1, /* 0:on 1:off 2:keep */
 			},
 		},
 	},
 };
+#endif /* CONFIG_LEDS_GPIO CONFIG_LEDS_GPIO_MODULE) */
 
 #if defined(CONFIG_KEYBOARD_GPIO)
 static struct gpio_keys_button pdk7105_keys[] = {
@@ -366,7 +372,9 @@ static struct platform_device nand_device = {
 
 
 static struct platform_device *pdk7105_devices[] __initdata = {
+#if defined(CONFIG_LEDS_GPIO) || defined(CONFIG_LEDS_GPIO_MODULE)
 	&pdk7105_leds, /* rexct.131108:register leds */
+#endif
 //	&pdk7105_phy_device,
 	&spi_pio_device,
 #if defined(CONFIG_KEYBOARD_GPIO)
