@@ -659,7 +659,8 @@ static int fdma_load_elf(const struct firmware *fw, struct fdma *fdma)
 	int res;
 
 	if (!fw) {
-		fdma_info(fdma, "Unable to load FDMA firmware: not present?\n");
+		fdma_info(fdma, "Unable to load FDMA firmware: %s not present?\n",
+				fdma->fw_name);
 		return -EINVAL;
 	}
 
