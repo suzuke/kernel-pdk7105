@@ -1,6 +1,6 @@
 #!/bin/bash
 set -o errexit
-[ $# -ne 1 ] && echo "Usage: make.sh <all/menu>" && exit 1
+[ $# -ne 1 ] && echo "Usage: make.sh <kernel/all/menu>" && exit 1
 if ! which sh4-linux-gcc >/dev/null 2>&1 ; then
   echo "Err: sh4-linux-gcc not exist" && exit 1
 fi
@@ -33,13 +33,13 @@ if [ ! -r .config ] ; then
     make $XFLAGS pdk7105_defconfig
   fi
 fi
-if [ "$1" = "all" ] ; then
+if [ "$1" = "all" -o "$1" = "kernel" ] ; then
   go make $XFLAGS oldconfig
 elif [ "$1" = "menu" ] ; then
   go make $XFLAGS menuconfig
   cp .config kernel.config
 else
-  echo "Usage: make.sh <all/menu>" && exit 1
+  echo "Usage: make.sh <kernel/all/menu>" && exit 1
 fi
 
 echo '***' CFLAGS="-Wall -Wformat -m -pipe -O3 -ffast-math" make $XFLAGS vmlinux
@@ -64,6 +64,9 @@ CFLAGS="-Wall -Wformat -m -pipe -O3 -ffast-math" make $XFLAGS vmlinux
 
 go make $XFLAGS uImage
 go ls -l arch/sh/boot/uImage.gz
+if [ "$1" = kernel ] ; then
+  exit 0
+fi
 #go fakeroot tar -cJf sh4twbox-kernel.txz vmlinux.ub
 #ls -l *.txz
 rm -rf lib/modules
