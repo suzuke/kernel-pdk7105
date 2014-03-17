@@ -58,6 +58,7 @@
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
 #include <scsi/scsi_device.h>
+#include <linux/stm/stx7105.h>
 
 #include "usb.h"
 #include "scsiglue.h"
@@ -117,7 +118,7 @@ MODULE_PARM_DESC(quirks, "supplemental list of device IDs and their quirks");
 }
 
 static struct us_unusual_dev us_unusual_dev_list[] = {
-#	include "unusual_devs.h" 
+#	include "unusual_devs.h"
 	{ }		/* Terminating entry */
 };
 
@@ -235,7 +236,7 @@ void fill_inquiry_response(struct us_data *us, unsigned char *data,
 			      to this logical unit") and leave vendor and
 			      product identification empty. ("If the target
 			      does store some of the INQUIRY data on the
-			      device, it may return zeros or ASCII spaces 
+			      device, it may return zeros or ASCII spaces
 			      (20h) in those fields until the data is
 			      available from the device."). */
 	} else {
@@ -291,7 +292,7 @@ static int usb_stor_control_thread(void * __us)
 
 		scsi_unlock(host);
 
-		/* reject the command if the direction indicator 
+		/* reject the command if the direction indicator
 		 * is UNKNOWN
 		 */
 		if (us->srb->sc_data_direction == DMA_BIDIRECTIONAL) {
@@ -302,7 +303,7 @@ static int usb_stor_control_thread(void * __us)
 		/* reject if target != 0 or if LUN is higher than
 		 * the maximum known LUN
 		 */
-		else if (us->srb->device->id && 
+		else if (us->srb->device->id &&
 				!(us->fflags & US_FL_SCM_MULT_TARG)) {
 			US_DEBUGP("Bad target number (%d:%d)\n",
 				  us->srb->device->id, us->srb->device->lun);
@@ -315,7 +316,7 @@ static int usb_stor_control_thread(void * __us)
 			us->srb->result = DID_BAD_TARGET << 16;
 		}
 
-		/* Handle those devices which need us to fake 
+		/* Handle those devices which need us to fake
 		 * their inquiry data */
 		else if ((us->srb->cmnd[0] == INQUIRY) &&
 			    (us->fflags & US_FL_FIX_INQUIRY)) {
@@ -339,7 +340,7 @@ static int usb_stor_control_thread(void * __us)
 
 		/* indicate that the command is done */
 		if (us->srb->result != DID_ABORT << 16) {
-			US_DEBUGP("scsi cmd done, result=0x%x\n", 
+			US_DEBUGP("scsi cmd done, result=0x%x\n",
 				   us->srb->result);
 			us->srb->scsi_done(us->srb);
 		} else {
@@ -377,7 +378,7 @@ SkipForAbort:
 	}
 	__set_current_state(TASK_RUNNING);
 	return 0;
-}	
+}
 
 /***********************************************************************
  * Device probing and disconnecting
@@ -681,7 +682,7 @@ static int get_pipes(struct us_data *us)
 	us->recv_ctrl_pipe = usb_rcvctrlpipe(us->pusb_dev, 0);
 	us->send_bulk_pipe = usb_sndbulkpipe(us->pusb_dev,
 		usb_endpoint_num(ep_out));
-	us->recv_bulk_pipe = usb_rcvbulkpipe(us->pusb_dev, 
+	us->recv_bulk_pipe = usb_rcvbulkpipe(us->pusb_dev,
 		usb_endpoint_num(ep_in));
 	if (ep_int) {
 		us->recv_intr_pipe = usb_rcvintpipe(us->pusb_dev,
@@ -714,7 +715,7 @@ static int usb_stor_acquire_resources(struct us_data *us)
 	/* Start up our control thread */
 	th = kthread_run(usb_stor_control_thread, us, "usb-storage");
 	if (IS_ERR(th)) {
-		printk(KERN_WARNING USB_STORAGE 
+		printk(KERN_WARNING USB_STORAGE
 		       "Unable to start control thread\n");
 		return PTR_ERR(th);
 	}
@@ -841,7 +842,7 @@ static int usb_stor_scan_thread(void * __us)
 
 		/* Should we unbind if no devices were detected? */
 	}
-
+	complete(&us->thread_done);
 	complete_and_exit(&us->scanning_done, 0);
 }
 
@@ -880,6 +881,8 @@ int usb_stor_probe1(struct us_data **pus,
 	init_completion(&(us->notify));
 	init_waitqueue_head(&us->delay_wait);
 	init_completion(&us->scanning_done);
+	init_completion(&us->thread_done);
+
 
 	/* Associate the us_data structure with the USB device */
 	result = associate_dev(us, intf);
@@ -910,6 +913,7 @@ EXPORT_SYMBOL_GPL(usb_stor_probe1);
 /* Second part of general USB mass-storage probing */
 int usb_stor_probe2(struct us_data *us)
 {
+	static int is_dom_scanned=0;
 	struct task_struct *th;
 	int result;
 
@@ -944,7 +948,7 @@ int usb_stor_probe2(struct us_data *us)
 	/* Start up the thread for delayed SCSI-device scanning */
 	th = kthread_create(usb_stor_scan_thread, us, "usb-stor-scan");
 	if (IS_ERR(th)) {
-		printk(KERN_WARNING USB_STORAGE 
+		printk(KERN_WARNING USB_STORAGE
 		       "Unable to start the device-scanning thread\n");
 		complete(&us->scanning_done);
 		quiesce_and_remove_host(us);
@@ -953,6 +957,19 @@ int usb_stor_probe2(struct us_data *us)
 	}
 
 	wake_up_process(th);
+
+	if (!is_dom_scanned) {
+		US_DEBUGP("%s %s:%d enable stx7105_configure_usb 1\n",
+			__func__, __FILE__, __LINE__);
+		is_dom_scanned = 1;
+		stx7105_configure_usb(1, &(struct stx7105_usb_config) {
+		    .ovrcur_mode = stx7105_usb_ovrcur_active_low,
+		    .pwr_enabled = 1,
+		    .routing.usb1.ovrcur = stx7105_usb1_ovrcur_pio4_6,
+		    .routing.usb1.pwr = stx7105_usb1_pwr_pio4_7, });
+		US_DEBUGP("%s %s:%d end stx7105_configure_usb 1\n",
+			__func__, __FILE__, __LINE__);
+	}
 
 	return 0;
 
@@ -1007,6 +1024,7 @@ static int storage_probe(struct usb_interface *intf,
 	/* No special transport or protocol settings in the main module */
 
 	result = usb_stor_probe2(us);
+
 	return result;
 }
 

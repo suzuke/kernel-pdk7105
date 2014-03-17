@@ -135,12 +135,12 @@ static struct stpio_pin *phy_reset_pin;
 
 static int pdk7105_phy_reset(void* bus)
 {
-#if 1 
+#if 1
     gpio_set_value(PDK7105_PIO_PHY_RESET, 1);
 #else
     gpio_set_value(PDK7105_PIO_PHY_RESET, 0);
 	udelay(100);
-    gpio_set_value(PDK7105_PIO_PHY_RESET, 1); 
+    gpio_set_value(PDK7105_PIO_PHY_RESET, 1);
 #endif
 	return 1;
 }
@@ -167,7 +167,7 @@ static struct platform_device pdk7105_phy_device = {
 	.resource	= (struct resource[]) {
 		{
 			.name	= "phyirq",
-			.start	= -1, //FIXME, should be ILC_EXT_IRQ(6), 
+			.start	= -1, //FIXME, should be ILC_EXT_IRQ(6),
 			.end	= -1,
 			.flags	= IORESOURCE_IRQ,
 		},
@@ -427,12 +427,12 @@ static int __init device_init(void)
 		/* Default configuration */
 		printk("Configuring FLASH for boot-from-NOR\n");
 	}
-	else if (boot_mode == 0x1) 
+	else if (boot_mode == 0x1)
 	{
 		/* Swap NOR/NAND banks */
 		printk("Configuring FLASH for boot-from-NAND\n");
 		//printk("Boot nand: bank1_start=0x%x, bank2_start0x=%x\n",bank1_start,bank2_start);
-		
+
 		pdk7105_physmap_flash.resource[0].start = bank1_start;
 		pdk7105_physmap_flash.resource[0].end = bank2_start - 1;
 		nand_device.id = 0;
@@ -448,10 +448,10 @@ static int __init device_init(void)
 		//nand_device.id =2; /*If your board is 1.0version,set id to 2*/
 		nand_device.id = 0; /*If your board is 2.0version,set id to 0*/
 	}
-	
+
 	stx7105_configure_pci(&pci_config);
 	stx7105_configure_sata(0);
-	
+
     //stx7105_configure_pwm(&pwm_private_info);
 	stx7105_configure_pwm(&(struct stx7105_pwm_config) {
             .out0 = stx7105_pwm_out0_pio13_0,
@@ -485,11 +485,13 @@ static int __init device_init(void)
             .pwr_enabled = 1,
             .routing.usb0.ovrcur = stx7105_usb0_ovrcur_pio4_4,
             .routing.usb0.pwr = stx7105_usb0_pwr_pio4_5, });
+	/* enable external after internal USB probe
     stx7105_configure_usb(1, &(struct stx7105_usb_config) {
             .ovrcur_mode = stx7105_usb_ovrcur_active_low,
             .pwr_enabled = 1,
             .routing.usb1.ovrcur = stx7105_usb1_ovrcur_pio4_6,
             .routing.usb1.pwr = stx7105_usb1_pwr_pio4_7, });
+	*/
 
 
 	//phy_reset_pin = stpio_request_set_pin(15, 5, "eth_phy_reset",
@@ -497,24 +499,24 @@ static int __init device_init(void)
     gpio_request(PDK7105_PIO_PHY_RESET, "eth_phy_reset");
     gpio_direction_output(PDK7105_PIO_PHY_RESET, 1);
 
-					      
-   
+
+
     /* gongjia add set pio15_5 to 1 smit*/
 	//stpio_set_pin(phy_reset_pin, 0);
     gpio_set_value(PDK7105_PIO_PHY_RESET, 0);
 	for(i=0;i<5;i++)
 	{
 	    udelay(20000);
-	}	
+	}
 	//stpio_set_pin(phy_reset_pin, 1);
     gpio_set_value(PDK7105_PIO_PHY_RESET, 1);
-	
+
 	//stx7105_configure_ethernet(0, 0, 0, 0, 0, 0);
     //stx7105_configure_ethernet(0, &(struct stx7105_ethernet_config) {
     //        .mode = stx7105_ethernet_mode_mii,
     //        .ext_clk = 0,
     //        .phy_bus = 0, });
-    
+
     stx7105_configure_ethernet(0, &(struct stx7105_ethernet_config) {
             .mode = stx7105_ethernet_mode_mii,
             .ext_clk = 1,
@@ -524,13 +526,13 @@ static int __init device_init(void)
             });
 
 
-#if defined(CONFIG_LIRC_SUPPORT) 
+#if defined(CONFIG_LIRC_SUPPORT)
 	//stx7105_configure_lirc(&lirc_scd);
     stx7105_configure_lirc(&(struct stx7105_lirc_config) {
             .rx_mode = stx7105_lirc_rx_mode_ir,
             .tx_enabled = 1,
             .tx_od_enabled = 1, });
-#endif 
+#endif
 	//stx7105_configure_audio_pins(3, 1, 1);
 
 	/*
@@ -550,7 +552,7 @@ static int __init device_init(void)
 
 
 	//spi_register_board_info(spi_serialflash, ARRAY_SIZE(spi_serialflash));
- 
+
 	return platform_add_devices(pdk7105_devices, ARRAY_SIZE(pdk7105_devices));
 }
 arch_initcall(device_init);
